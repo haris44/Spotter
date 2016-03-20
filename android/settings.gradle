@@ -1,0 +1,3 @@
+rootProject.name = 'Spotter2'
+
+include ':app'
