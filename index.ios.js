@@ -19,6 +19,7 @@ import React, {
 const STORAGE_KEY = '@AsyncStorage:';
 const SideMenu = require('react-native-side-menu');
 var categorie = [];
+var categorieencours;
 
 class Categorie extends Component{
     render(){
@@ -30,7 +31,8 @@ class Categorie extends Component{
         )
     }
     categorie(idcategorie){
-        alert(idcategorie);
+        categorieencours = idcategorie;
+        Picker.load(idcategorie);
     }
 
     static async save(nom, id) {
@@ -50,6 +52,8 @@ class Categorie extends Component{
     static async load() {
         try {
             categorie = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + "categories"));
+            categorieencours = categorie[0].id;
+            //Categorie.save("Champignons", 2)
         }
         catch (error){
             console.log('AsyncStorage error: ' + error.message);
@@ -67,7 +71,8 @@ class Categorie extends Component{
     }
 
 }
-Categorie.load();
+
+Categorie.load()
 
 //Categorie.deleteAll();
 
@@ -81,14 +86,15 @@ class Menu extends Component {
 
   render() {
       this.rows = [];
-      categorie.forEach((element) => {
-          this.rows.push(<Categorie text={element.nom} idcategorie={element.id}/>);
-      })
-
+      if(categorie == null){
+          categorie = [];
+      }
     return (
       <View style={styles.sidemenu}>
           <View style={styles.topbars}></View>
-          <View>{this.rows}</View>
+          <View>{categorie.map(function(element) {
+           return <Categorie key={element.id} idcategorie={element.id} text={element.nom} />;
+        })}</View>
       </View>
     );
   }
@@ -96,9 +102,10 @@ class Menu extends Component {
 
 class Picker {
 
-    static async save() {
+    static async save(categorie) {
         try {
-            await AsyncStorage.setItem(STORAGE_KEY + "picker", JSON.stringify(Map.markers));
+            console.log(categorie)
+            await AsyncStorage.setItem(STORAGE_KEY + categorie + ":picker", JSON.stringify(Map.markers));
             console.log('Saved selection to disk: ' + Map.markers);
         }
         catch (error) {
@@ -106,9 +113,12 @@ class Picker {
         }
     }
 
-    static async load() {
+    static async load(categorie) {
         try {
-            Map.markers = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + "picker"));
+            console.log(categorie)
+            Map.markers = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + categorie + ":picker"));
+            //Picker.deleteAll(1);
+            //Picker.deleteAll(2)
             if(Map.markers === null){
                 Map.markers = [];
             }
@@ -118,9 +128,9 @@ class Picker {
             console.log('AsyncStorage error: ' + error.message);
         }
     }
-    static async deleteAll(){
+    static async deleteAll(categorie){
         try {
-            await AsyncStorage.removeItem(STORAGE_KEY + "picker");
+            await AsyncStorage.removeItem(STORAGE_KEY + categorie + ":picker");
             this._appendMessage('Selection removed from disk.');
         } catch (error) {
             this._appendMessage('AsyncStorage error: ' + error.message);
@@ -139,7 +149,6 @@ class Map extends Component{
         this.marker = val;
     }
 
-
     static get instance(){
         return this._instance
     }
@@ -151,7 +160,7 @@ class Map extends Component{
     constructor(){
         super();
         if(Map.instance != typeof(Map)){
-            Picker.load()
+            Picker.load(categorieencours)
             Map.instance = this;
             return this;
         }
@@ -172,7 +181,7 @@ class Map extends Component{
     }
 
     onPressButton(){
-        console.log("test")
+        console.log(categorieencours[0])
         navigator.geolocation.getCurrentPosition(
           (position) => {
               Map.markers.push({
@@ -182,7 +191,7 @@ class Map extends Component{
                   subtitle : 'test'
               });
                this.forceUpdate();
-               Picker.save();
+               Picker.save(categorieencours);
           });
     }
 
