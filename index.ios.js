@@ -12,6 +12,8 @@ import React, {
   ScrollView,
   TouchableOpacity,
   MapView,
+  Modal,
+  TextInput,
   AsyncStorage,
   View
 } from 'react-native';
@@ -20,6 +22,143 @@ const STORAGE_KEY = '@AsyncStorage:';
 const SideMenu = require('react-native-side-menu');
 var categorie = [];
 var categorieencours;
+
+class PickerModal extends Component {
+
+    static get instance(){
+        return this._instance
+    }
+
+    static set instance(val){
+        this._instance = val;
+    }
+
+    constructor(){
+        super();
+        if(PickerModal.instance != typeof(PickerModal)){
+            PickerModal.instance = this;
+            this.state =  {
+              animated: true,
+              modalVisible: false,
+              transparent: true,
+            };
+            return this;
+        }
+        else{
+            return PickerModal.instance;
+        }
+    }
+
+  _setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
+  toggle(){
+      this._setModalVisible.bind(this, false)
+  }
+
+  render() {
+    var modalBackgroundStyle = {
+      backgroundColor: this.state.transparent ? 'rgba(0, 0, 0, 0.5)' : '#f5fcff',
+    };
+    var innerContainerTransparentStyle = {backgroundColor: '#fff', padding: 20}
+
+
+    return (
+        <Modal
+          animated={this.state.animated}
+          transparent={this.state.transparent}
+          visible={this.state.modalVisible}>
+          <View style={[styles.modalVisiblecontainer, modalBackgroundStyle]}>
+            <View style={[styles.innerContainer, innerContainerTransparentStyle]}>
+              <Text>Ajouter un point</Text>
+              <Text>Ici</Text>
+              <Text>Titre de votre point</Text>
+                    <TextInput style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+              <Text>Commentaire</Text>
+                    <TextInput style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+              <TouchableOpacity
+                onPress={this._setModalVisible.bind(this, false)}
+                style={styles.modalButton}>
+                <Text>Valider</Text>
+              </TouchableOpacity>
+                <Text>Annuler</Text>
+            </View>
+          </View>
+        </Modal>
+
+    );
+  }
+};
+
+AppRegistry.registerComponent('PickerModal', () => PickerModal);
+
+
+class CategorieModal extends Component {
+
+    static get instance(){
+        return this._instance
+    }
+
+    static set instance(val){
+        this._instance = val;
+    }
+
+    constructor(){
+        super();
+        if(CategorieModal.instance != typeof(CategorieModal)){
+            CategorieModal.instance = this;
+            this.state =  {
+              animated: true,
+              modalVisible: false,
+              transparent: true,
+            };
+            return this;
+        }
+        else{
+            return CategorieModal.instance;
+        }
+    }
+
+  _setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
+  toggle(){
+      this._setModalVisible.bind(this, false)
+  }
+
+  render() {
+    var modalBackgroundStyle = {
+      backgroundColor: this.state.transparent ? 'rgba(0, 0, 0, 0.5)' : '#f5fcff',
+    };
+    var innerContainerTransparentStyle = {backgroundColor: '#fff', padding: 20}
+
+
+    return (
+        <Modal
+          animated={this.state.animated}
+          transparent={this.state.transparent}
+          visible={this.state.modalVisible}>
+          <View style={[styles.modalVisiblecontainer, modalBackgroundStyle]}>
+            <View style={[styles.innerContainer, innerContainerTransparentStyle]}>
+              <Text>Categorie Modal</Text>
+                <TextInput style={{height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+              <TouchableOpacity
+                onPress={this._setModalVisible.bind(this, false)}
+                style={styles.modalButton}>
+                <Text>Valider</Text>
+
+              </TouchableOpacity>
+            </View>
+          </View>
+        </Modal>
+
+    );
+  }
+};
+
+AppRegistry.registerComponent('CategorieModal', () => CategorieModal);
 
 class Categorie extends Component{
     render(){
@@ -84,6 +223,9 @@ AppRegistry.registerComponent('Categorie', () => Categorie );
 
 class Menu extends Component {
 
+    OnPress(){
+        CategorieModal.instance._setModalVisible()
+    }
   render() {
       this.rows = [];
       if(categorie == null){
@@ -95,6 +237,11 @@ class Menu extends Component {
           <View>{categorie.map(function(element) {
            return <Categorie key={element.id} idcategorie={element.id} text={element.nom} />;
         })}</View>
+        <View style={styles.plusCate}>
+        <TouchableOpacity onPress={this.OnPress}>
+            <Text style={styles.plusCateText}>+</Text>
+            </TouchableOpacity>
+        </View>
       </View>
     );
   }
@@ -214,7 +361,7 @@ class Spotter2 extends Component {
     }
 
     OnPress(){
-        Map.instance.onPressButton();
+        PickerModal.instance._setModalVisible()
     }
 
     Delete(){
@@ -228,6 +375,10 @@ class Spotter2 extends Component {
             isOpen={this.state.isOpen}
             menu={this.menu}
             onContentPress={() => this.closeMenu()}>
+
+            <View>
+            <CategorieModal></CategorieModal>
+            <PickerModal></PickerModal>
                 <View style={styles.topbar}></View>
                 <View style={styles.menu}>
                     <TouchableOpacity onPress={() => this.toggleMenu()}>
@@ -236,12 +387,18 @@ class Spotter2 extends Component {
                 <View style={styles.container}>
                     <Text style={styles.title}>Spotter</Text>
                 </View>
-                    <TouchableOpacity onPress={this.OnPress}>
                         <Image style={styles.logo} source={require('./img/logo.png')}/>
-                    </TouchableOpacity>
                 </View>
                 <Map/>
-        </SideMenu>
+
+                <View style={styles.plus}>
+                <TouchableOpacity onPress={this.OnPress}>
+                    <Text style={styles.plusText}>+</Text>
+                    </TouchableOpacity>
+                </View>
+                </View>
+            </SideMenu>
+
         );
     };
 }
@@ -255,6 +412,31 @@ var regions = {
 };
 
 const styles = StyleSheet.create({
+    plus: {position: 'absolute', shadowColor: 'black', shadowOffset: {height : 2, width : 1},shadowOpacity: 0.8, borderRadius: 60, left : 230, top : 480, backgroundColor: '#00bcd4', height:60, width:60
+},
+
+plusCate: {position: 'absolute', shadowColor: 'black', shadowOffset: {height : 2, width : 1},shadowOpacity: 0.8, borderRadius: 60, left : 150, top : 500, backgroundColor: '#00bcd4', height:50, width:50
+},
+
+    plusText:{
+        top:4,
+        left:19,
+        fontSize:40,
+        backgroundColor: "transparent",
+        color:"white",
+        fontWeight:"300"
+
+    },
+
+    plusCateText:{
+        top:-1,
+        left:14,
+        fontSize:40,
+        backgroundColor: "transparent",
+        color:"white",
+        fontWeight:"300"
+
+    },
 
     line:{
         height:1,
@@ -279,12 +461,6 @@ const styles = StyleSheet.create({
   add: {
     backgroundColor: '#455a64',
    },
-
-  plus: {
-    fontSize: 25,
-    color:'#ffffff',
-    fontWeight: '200',
-  },
 
   menu: {
     height: 60,
@@ -330,6 +506,15 @@ const styles = StyleSheet.create({
     paddingLeft: 10,
     fontSize:16,
   },
+  modalVisiblecontainer: {
+  flex: 1,
+  justifyContent: 'center',
+  padding: 20,
+},
+innerContainer: {
+   borderRadius: 10,
+   alignItems: 'center',
+ },
 });
 
 
