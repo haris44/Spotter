@@ -20,11 +20,90 @@ import React, {
 
 const STORAGE_KEY = '@AsyncStorage:';
 const SideMenu = require('react-native-side-menu');
-const PickerModal = require('./class/PickerModal.js').PickerModal;
 var categorie = [];
 var categorieencours;
 
+class PickerModal extends Component {
+
+    static get instance(){
+        return this._instance
+    }
+
+    static set instance(val){
+        this._instance = val;
+    }
+
+    constructor(){
+        super();
+
+        if(PickerModal.instance != typeof(PickerModal)){
+            PickerModal.instance = this;
+            this.state =  {
+              animated: true,
+              modalVisible: false,
+              transparent: true,
+              subtext: ''
+            };
+            return this;
+        }
+        else{
+            return PickerModal.instance;
+        }
+    }
+
+  _setModalVisible(visible) {
+    this.setState({modalVisible: visible});
+  }
+
+  toggle(){
+      this._setModalVisible.bind(this, false)
+  }
+
+  onAddPress(visible){
+      console.log(this.state.text, this.state.subtext);
+      Map.instance.addPicker(this.state.text, this.state.subtext);
+      this.setState({modalVisible: visible});
+  }
+  render() {
+    var modalBackgroundStyle = {
+      backgroundColor: this.state.transparent ? 'rgba(0, 0, 0, 0.5)' : '#f5fcff',
+    };
+    var innerContainerTransparentStyle = {backgroundColor: '#fff', padding: 20}
+
+
+
+    return (
+        <Modal
+          animated={this.state.animated}
+          transparent={this.state.transparent}
+          visible={this.state.modalVisible}>
+          <View style={[styles.modalVisiblecontainer, modalBackgroundStyle]}>
+            <View style={[styles.innerContainer, innerContainerTransparentStyle]}>
+              <Text> point</Text>
+              <Text>Titre de votre point</Text>
+                    <TextInput onChangeText={(text) => this.setState({text})}
+                    value={this.state.text} style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+              <Text>Description de votre point</Text>
+                    <TextInput onChangeText={(subtext) => this.setState({subtext})}
+                    value={this.state.subtext} style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+
+
+              <TouchableOpacity
+                onPress={this.onAddPress.bind(this, false)}
+                style={styles.modalButton}>
+                <Text>Valider</Text>
+              </TouchableOpacity>
+                <Text>Annuler</Text>
+            </View>
+          </View>
+        </Modal>
+
+    );
+  }
+};
+
 AppRegistry.registerComponent('PickerModal', () => PickerModal);
+
 
 class CategorieModal extends Component {
 
@@ -60,6 +139,7 @@ class CategorieModal extends Component {
 
   onAddPress(){
       Categorie.save(this.state.text)
+
       this.setState({modalVisible: false});
 
   }
@@ -135,6 +215,9 @@ class Categorie extends Component{
             categorie = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + "categories"));
             categorieencours = categorie[0].id;
 
+            categorie.forEach((element) => {
+                console.log(element.id);
+            })
             //Categorie.save("Champignons", 2)
         }
         catch (error){
@@ -207,6 +290,8 @@ class Picker {
         try {
             console.log(categorie)
             Map.markers = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + categorie + ":picker"));
+            //Picker.deleteAll(1);
+            //Picker.deleteAll(2)
             if(Map.markers === null){
                 Map.markers = [];
             }
@@ -316,6 +401,7 @@ class Spotter2 extends Component {
             isOpen={this.state.isOpen}
             menu={this.menu}
             onContentPress={() => this.closeMenu()}>
+
             <View>
             <CategorieModal></CategorieModal>
             <PickerModal></PickerModal>
@@ -343,7 +429,7 @@ class Spotter2 extends Component {
     };
 }
 
-//Picker.deleteAll(2);
+//Picker.deleteAll(5);
 
 var regions = {
     latitude: 47.2171455,
