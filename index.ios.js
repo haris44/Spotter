@@ -20,79 +20,11 @@ import React, {
 
 const STORAGE_KEY = '@AsyncStorage:';
 const SideMenu = require('react-native-side-menu');
+const PickerModal = require('./class/PickerModal.js').PickerModal;
 var categorie = [];
 var categorieencours;
 
-class PickerModal extends Component {
-
-    static get instance(){
-        return this._instance
-    }
-
-    static set instance(val){
-        this._instance = val;
-    }
-
-    constructor(){
-        super();
-        if(PickerModal.instance != typeof(PickerModal)){
-            PickerModal.instance = this;
-            this.state =  {
-              animated: true,
-              modalVisible: false,
-              transparent: true,
-            };
-            return this;
-        }
-        else{
-            return PickerModal.instance;
-        }
-    }
-
-  _setModalVisible(visible) {
-    this.setState({modalVisible: visible});
-  }
-
-  toggle(){
-      this._setModalVisible.bind(this, false)
-  }
-
-  render() {
-    var modalBackgroundStyle = {
-      backgroundColor: this.state.transparent ? 'rgba(0, 0, 0, 0.5)' : '#f5fcff',
-    };
-    var innerContainerTransparentStyle = {backgroundColor: '#fff', padding: 20}
-
-
-    return (
-        <Modal
-          animated={this.state.animated}
-          transparent={this.state.transparent}
-          visible={this.state.modalVisible}>
-          <View style={[styles.modalVisiblecontainer, modalBackgroundStyle]}>
-            <View style={[styles.innerContainer, innerContainerTransparentStyle]}>
-              <Text>Ajouter un point</Text>
-              <Text>Ici</Text>
-              <Text>Titre de votre point</Text>
-                    <TextInput style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
-              <Text>Commentaire</Text>
-                    <TextInput style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
-              <TouchableOpacity
-                onPress={this._setModalVisible.bind(this, false)}
-                style={styles.modalButton}>
-                <Text>Valider</Text>
-              </TouchableOpacity>
-                <Text>Annuler</Text>
-            </View>
-          </View>
-        </Modal>
-
-    );
-  }
-};
-
 AppRegistry.registerComponent('PickerModal', () => PickerModal);
-
 
 class CategorieModal extends Component {
 
@@ -112,6 +44,7 @@ class CategorieModal extends Component {
               animated: true,
               modalVisible: false,
               transparent: true,
+              text: ""
             };
             return this;
         }
@@ -120,8 +53,15 @@ class CategorieModal extends Component {
         }
     }
 
+
   _setModalVisible(visible) {
     this.setState({modalVisible: visible});
+  }
+
+  onAddPress(){
+      Categorie.save(this.state.text)
+      this.setState({modalVisible: false});
+
   }
 
   toggle(){
@@ -142,13 +82,14 @@ class CategorieModal extends Component {
           visible={this.state.modalVisible}>
           <View style={[styles.modalVisiblecontainer, modalBackgroundStyle]}>
             <View style={[styles.innerContainer, innerContainerTransparentStyle]}>
-              <Text>Categorie Modal</Text>
-                <TextInput style={{height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
+
+            <Text>Titre de votre Catégorie</Text>
+                  <TextInput onChangeText={(text) => this.setState({text})}
+                  value={this.state.text} style={{left: 10, right: 10, height: 30, borderColor: 'gray', borderWidth: 1}} ></TextInput>
               <TouchableOpacity
-                onPress={this._setModalVisible.bind(this, false)}
+                onPress={this.onAddPress.bind(this, false)}
                 style={styles.modalButton}>
                 <Text>Valider</Text>
-
               </TouchableOpacity>
             </View>
           </View>
@@ -174,14 +115,15 @@ class Categorie extends Component{
         Picker.load(idcategorie);
     }
 
-    static async save(nom, id) {
-
+    static async save(nom) {
+        var newid = categorie.length
         try {
-            var obj = { nom : nom, id : id };
+            var obj = { nom : nom, id : newid};
             categorie.push(obj);
             console.log(categorie);
             await AsyncStorage.setItem(STORAGE_KEY + "categories", JSON.stringify(categorie));
             console.log('Saved selection to disk: ' + Map.markers);
+            Categorie.load();
         }
         catch (error) {
             console.log('AsyncStorage error: ' + error.message);
@@ -192,6 +134,7 @@ class Categorie extends Component{
         try {
             categorie = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + "categories"));
             categorieencours = categorie[0].id;
+
             //Categorie.save("Champignons", 2)
         }
         catch (error){
@@ -264,8 +207,6 @@ class Picker {
         try {
             console.log(categorie)
             Map.markers = JSON.parse(await AsyncStorage.getItem(STORAGE_KEY + categorie + ":picker"));
-            //Picker.deleteAll(1);
-            //Picker.deleteAll(2)
             if(Map.markers === null){
                 Map.markers = [];
             }
@@ -327,15 +268,15 @@ class Map extends Component{
         );
     }
 
-    onPressButton(){
-        console.log(categorieencours[0])
+    addPicker(title, subtitle){
+        console.log("Enter on AddPicker")
         navigator.geolocation.getCurrentPosition(
           (position) => {
               Map.markers.push({
                   latitude : position.coords.latitude,
                   longitude : position.coords.longitude,
-                  title : 'test',
-                  subtitle : 'test'
+                  title : title,
+                  subtitle : subtitle
               });
                this.forceUpdate();
                Picker.save(categorieencours);
@@ -375,7 +316,6 @@ class Spotter2 extends Component {
             isOpen={this.state.isOpen}
             menu={this.menu}
             onContentPress={() => this.closeMenu()}>
-
             <View>
             <CategorieModal></CategorieModal>
             <PickerModal></PickerModal>
@@ -402,6 +342,8 @@ class Spotter2 extends Component {
         );
     };
 }
+
+//Picker.deleteAll(2);
 
 var regions = {
     latitude: 47.2171455,
